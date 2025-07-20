@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction Result | Heart Disease Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.lordicon.com/lordicon-2.1.0.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6fe0f1 0%, #5394ac 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Roboto', Arial, sans-serif;
+            overflow-x: hidden;
+        }
+        .card {
+            background: rgba(255,255,255,0.20);
+            border-radius: 32px;
+            box-shadow: 0 16px 40px rgba(127,83,172,0.17);
+            padding: 56px 38px 40px 38px;
+            max-width: 480px;
+            width: calc(100vw - 40px);
+            text-align: center;
+            backdrop-filter: blur(14px) saturate(120%);
+            border: 2px solid rgba(127, 83, 172, 0.1);
+            position: relative;
+            animation: rise 1.2s cubic-bezier(.27,.64,.44,1.32);
+        }
+        @keyframes rise {
+            0% { transform: translateY(48px) scale(0.94); opacity: 0.5;}
+            60% { transform: translateY(-8px) scale(1.05);}
+            100% { transform: translateY(0) scale(1); opacity: 1;}
+        }
+        .icon {
+            margin-bottom: 13px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-title {
+            color: #286a87;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px #ddcef6aa;
+        }
+        .result-box {
+            margin: 27px auto 21px auto;
+            padding: 31px 18px 34px 18px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #f3e7fe 0%, #d7e3fc 100%);
+            box-shadow: 0 8px 32px rgba(160, 125, 210, 0.15);
+            color: #4721b7;
+            font-size: 1.7rem;
+            font-weight: 600;
+            transition: background 0.4s;
+            animation: pulseGlow 1.6s 0.5s ease-out;
+        }
+        @keyframes pulseGlow {
+            0% {box-shadow: 0 0 0 0 #8bf6f4aa;}
+            65% {box-shadow: 0 0 24px 8px #8bf6f488;}
+            100% {box-shadow: 0 8px 32px 0px #a07dd2;}
+        }
+        .result-badge-pass {
+            color: #2dae63;
+        }
+        .result-badge-fail {
+            color: #e94d65;
+        }
+        .advice {
+            margin-top: 14px;
+            color: #7d36a0;
+            font-size: 1.04rem;
+            letter-spacing: .04em;
+        }
+        .btn-home {
+            display: inline-block;
+            margin-top: 34px;
+            padding: 12px 35px;
+            background: linear-gradient(135deg, #bc6ff1, #7f53ac);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.09rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 2px 8px #b179ef55;
+        }
+        .btn-home:hover {
+            background: linear-gradient(135deg, #7f53ac, #bc6ff1);
+            transform: translateY(-2px) scale(1.03);
+        }
+        footer {
+            margin-top: 28px;
+            color: #c9aae9;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.85;
+        }
+        /* Confetti styles */
+        .confetti {
+            pointer-events: none; z-index: 9999; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- Confetti burst (success only, using js) -->
+    <canvas class="confetti" id="confetti-canvas"></canvas>
+    <div class="card">
+        <div class="icon">
+            <!-- Heart icon with animation -->
+            <lord-icon
+                src="https://cdn.lordicon.com/rjzlnunf.json"
+                trigger="loop"
+                delay="500"
+                colors="primary:#83209e,secondary:#df67e4"
+                style="width:72px;height:72px"
+            ></lord-icon>
+        </div>
+        <div class="result-title">Prediction Result</div>
+        <div class="result-box {% if result == 'No Heart Disease Predicted' %}result-badge-pass{% else %}result-badge-fail{% endif %}">
+            {{ result }}
+        </div>
+        <div class="advice">
+            
+            Please consult your healthcare provider for interpretation and next steps.
+        </div>
+        <a href="/" class="btn-home">Back to Home</a>
+        <footer>
+            &copy; 2025 Heart Disease Classifier | Designed to inspire confidence in your health journey
+        </footer>
+    </div>
+    <script>
+        // Simple confetti for "No Heart Disease Predicted"
+        document.addEventListener("DOMContentLoaded", function() {
+            var resultBox = document.querySelector('.result-box');
+            if(resultBox && resultBox.textContent.trim() === "No Heart Disease Predicted") {
+                startConfetti();
+            }
+        });
+        // Lightweight confetti burst, pure JS, just for fun
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const W = window.innerWidth;
+            const H = window.innerHeight;
+            canvas.width = W; canvas.height = H;
+            let confettis = [];
+            for(let i=0;i<66;i++){
+                confettis.push({
+                    x: Math.random()*W, y: -Math.random()*H*.33,
+                    r: Math.random()*9+6,
+                    d: Math.random()*W,
+                    color: "hsl(" + Math.floor(Math.random()*360) + ",90%,70%)",
+                    tilt:Math.random()*20-10
+                });
+            }
+            function draw() {
+                ctx.clearRect(0,0,W,H);
+                for(let confetti of confettis) {
+                    ctx.beginPath();
+                    ctx.ellipse(confetti.x, confetti.y, confetti.r, confetti.r/2, confetti.tilt, 0, 2*Math.PI);
+                    ctx.fillStyle = confetti.color;
+                    ctx.globalAlpha = 0.9;
+                    ctx.fill();
+                }
+            }
+            function update() {
+                for(let confetti of confettis) {
+                    confetti.y += 2 + Math.random()*1.9;
+                    confetti.x += Math.sin(confetti.d);
+                    confetti.tilt+= (Math.random()-0.5)*0.35;
+                    if(confetti.y > H){
+                        confetti.x=Math.random()*W; confetti.y=-10; confetti.d=Math.random()*W;
+                    }
+                }
+            }
+            function animate() {
+                draw(); update();
+                requestAnimationFrame(animate);
+            }
+            animate();
+            setTimeout(function(){canvas.style.display='none';}, 2600);
+        }
+    </script>
+</body>
+</html>
