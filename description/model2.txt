@@ -1,0 +1,15 @@
+{
+  "age": 22000,             // in days
+  "gender": 1,              // 1 = Male, 2 = Female
+  "height": 165,            // in centimeters
+  "weight": 78.0,           // in kilograms
+  "ap_hi": 140,             // systolic blood pressure
+  "ap_lo": 90,              // diastolic blood pressure
+  "cholesterol": 2,         // 1 = normal, 2 = above normal, 3 = well above normal
+  "gluc": 1,                // 1 = normal, 2 = above normal, 3 = well above normal
+  "smoke": 0,               // 0 = non-smoker, 1 = smoker
+  "alco": 0,                // 0 = doesn't drink, 1 = drinks alcohol
+  "active": 1               // 0 = not active, 1 = physically active
+}
+for model's input
+output : either 1 or 0 for presence of heart 
