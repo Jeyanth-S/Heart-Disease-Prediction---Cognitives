@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 700px;
+            padding: 40px 20px;
+            margin: 20px auto;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            column-gap: 25px;
+        }
+        .form-group {
+            margin-bottom: 8px;
+        }
+        label {
+            display: block;
+            color: #2c3e50;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2c3e50;
+            transition: all 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+            outline: none;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        button {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 25px auto 0;
+            display: block;
+            grid-column: 1 / -1;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        footer {
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Heart Disease Classifier</h1>
+        <form action="/predict" method="post">
+            <div class="form-group">
+                <label for="age">Age (years)</label>
+                <input type="number" id="age" name="age" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="sex">Sex (0: Female, 1: Male)</label>
+                <input type="number" id="sex" name="sex" min="0" max="1" required>
+            </div>
+            <div class="form-group">
+                <label for="cp">Chest pain type (0-3)</label>
+                <input type="number" id="cp" name="cp" min="0" max="3" required>
+            </div>
+            <div class="form-group">
+                <label for="trestbps">Resting blood pressure (mmHg)</label>
+                <input type="number" id="trestbps" name="trestbps" min="0" step="1" required>
+            </div>
+            <div class="form-group">
+                <label for="chol">Cholesterol (mg/dl)</label>
+                <input type="number" id="chol" name="chol" min="0" step="1" required>
+            </div>
+            <div class="form-group">
+                <label for="fbs">Fasting blood sugar >120 mg/dl (0: No, 1: Yes)</label>
+                <input type="number" id="fbs" name="fbs" min="0" max="1" required>
+            </div>
+            <div class="form-group">
+                <label for="restecg">Resting ECG results (0-2)</label>
+                <input type="number" id="restecg" name="restecg" min="0" max="2" required>
+            </div>
+            <div class="form-group">
+                <label for="thalach">Max heart rate achieved</label>
+                <input type="number" id="thalach" name="thalach" min="0" step="1" required>
+            </div>
+            <div class="form-group">
+                <label for="exang">Exercise-induced angina (0: No, 1: Yes)</label>
+                <input type="number" id="exang" name="exang" min="0" max="1" required>
+            </div>
+            <div class="form-group">
+                <label for="oldpeak">Oldpeak (ST depression)</label>
+                <input type="number" id="oldpeak" name="oldpeak" min="0" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="slope">Slope of ST segment (1-3)</label>
+                <input type="number" id="slope" name="slope" min="1" max="3" required>
+            </div>
+            <div class="form-group">
+                <label for="ca">Number of major vessels (0-3)</label>
+                <input type="number" id="ca" name="ca" min="0" max="3" required>
+            </div>
+            <div class="form-group">
+                <label for="thal">Thalassemia type (3, 6, 7)</label>
+                <input type="number" id="thal" name="thal" min="3" max="7" step="1" required>
+            </div>
+            <button type="submit">Diagnose</button>
+        </form>
+        <footer>
+            This tool is for educational purposes only—always consult a healthcare professional
+        </footer>
+    </div>
+</body>
+</html>
