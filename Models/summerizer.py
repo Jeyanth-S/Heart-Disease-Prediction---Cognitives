@@ -1,112 +1,115 @@
-
-
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from fpdf import FPDF
-import torch
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_score, recall_score
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
 
-print(" Loading FLAN-T5 model...")
+print("Loading FLAN-T5 model...")
 tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
 model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
-print("Model ready!\n")
+print("T5 Model Ready!\n")
 
+print("Training prediction model...")
 
+# ✅ WORKING DATASET LINK
+csv_url = "https://gist.githubusercontent.com/keshavsingh4522/9bba1fef273186b1ec61a7bb71a54802/raw/heart.csv"
+df = pd.read_csv(csv_url)
+
+# ✅ Match actual column names in the dataset
+df = df.rename(columns={
+    'cp': 'chest_pain_type',
+    'trtbps': 'trestbps',
+    'chol': 'chol',
+    'fbs': 'fbs',
+    'restecg': 'restecg',
+    'thalachh': 'thalach',
+    'exng': 'exang',
+    'output': 'target'
+})
+
+features = ['age', 'sex', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang']
+X = df[features]
+y = df['target']
+
+# Scale and train
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+clf = RandomForestClassifier(random_state=42)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print(f"Precision: {precision_score(y_test, y_pred):.2f}")
+print(f"Recall: {recall_score(y_test, y_pred):.2f}\n")
+
+# ✅ User input
 def get_user_input():
-    print("📋 Please enter patient information:")
-    def get_int(prompt): return int(input(prompt).strip())
-    def get_bin(prompt): return 1 if input(prompt + " (yes/no): ").strip().lower() == "yes" else 0
-
+    print("Enter patient info:")
+    def geti(p): return int(input(p).strip())
+    def getb(p): return 1 if input(p+" (yes/no): ").strip().lower()=="yes" else 0
     return {
-        'age': get_int("Age (in years): ") * 365,
-        'gender': get_int("Gender (1: Female, 2: Male): "),
-        'height': get_int("Height (cm): "),
-        'weight': get_int("Weight (kg): "),
-        'ap_hi': get_int("Systolic BP (e.g., 120): "),
-        'ap_lo': get_int("Diastolic BP (e.g., 80): "),
-        'cholesterol': get_int("Cholesterol (1: Normal, 2: Above Normal, 3: High): "),
-        'gluc': get_int("Glucose (1: Normal, 2: Above Normal, 3: High): "),
-        'smoke': get_bin("Do you smoke?"),
-        'alco': get_bin("Do you consume alcohol?"),
-        'active': get_bin("Are you physically active?")
+        'age': geti("Age (years): "),
+        'sex': getb("Male?"),
+        'trestbps': geti("Resting BP (mmHg): "),
+        'chol': geti("Cholesterol (mg/dL): "),
+        'fbs': getb("Fasting Blood Sugar >120?"),
+        'restecg': geti("Resting ECG (0 normal, 1 abnormal): "),
+        'thalach': geti("Max Heart Rate Achieved: "),
+        'exang': getb("Exercise-induced angina?")
     }
 
-
-
-def create_prompt(data, prediction):
-    age = data['age'] // 365
-    gender = "male" if data['gender'] == 2 else "female"
-    bp = f"{data['ap_hi']}/{data['ap_lo']} mmHg"
-    cholesterol = ["normal", "above normal", "high"][data['cholesterol'] - 1]
-    glucose = ["normal", "above normal", "high"][data['gluc'] - 1]
-
-    risk_status = "The patient is likely to have cardiovascular disease." if prediction == 1 else "The patient is currently not likely to have cardiovascular disease."
-
-    prompt = f"""
+def create_prompt(data, pred):
+    status = "likely to have cardiovascular disease." if pred else "not likely to have cardiovascular disease."
+    return f"""
 Patient Profile:
-- Age: {age} years
-- Gender: {gender}
-- Height: {data['height']} cm
-- Weight: {data['weight']} kg
-- Blood Pressure: {bp}
-- Cholesterol: {cholesterol}
-- Glucose: {glucose}
-- Smoking: {"yes" if data['smoke'] else "no"}
-- Alcohol: {"yes" if data['alco'] else "no"}
-- Physically Active: {"yes" if data['active'] else "no"}
+- Age: {data['age']} years
+- Gender: {'Male' if data['sex'] else 'Female'}
+- Resting BP: {data['trestbps']} mmHg
+- Cholesterol: {data['chol']} mg/dL
+- Fasting Blood Sugar >120: {'Yes' if data['fbs'] else 'No'}
+- Resting ECG: {'Abnormal' if data['restecg'] else 'Normal'}
+- Max HR: {data['thalach']}
+- Exercise Angina: {'Yes' if data['exang'] else 'No'}
 
-Prediction Result: {risk_status}
+Prediction: Patient is {status}
 
 TASK:
-Write a structured medical report with the following sections:
+Write a structured medical report with:
 1. Patient Vitals Summary
 2. Risk Factor Explanation
 3. Comparison to Healthy Adult
-4. Health Recommendations (if any)
+4. Health Recommendations
 5. Final Summary
-
-Use clear and medically accurate language.
 """
-    return prompt.strip()
-
 
 def generate_explanation(prompt):
-    input_ids = tokenizer(prompt, return_tensors="pt", truncation=True).input_ids
-    outputs = model.generate(input_ids, max_length=512, num_beams=4, early_stopping=True)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    ids = tokenizer(prompt, return_tensors="pt", truncation=True).input_ids
+    out = model.generate(ids, max_length=512, num_beams=4, early_stopping=True)
+    return tokenizer.decode(out[0], skip_special_tokens=True)
 
-
-def save_pdf(report, filename="cardio_summary.pdf"):
+def save_pdf(report, filename="cardio_report.pdf"):
     pdf = FPDF()
     pdf.add_page()
+    pdf.set_auto_page_break(True, margin=15)
+    pdf.set_font("Arial",'B',16)
+    pdf.multi_cell(0,10,"Cardiovascular Risk Assessment\n", align='C')
     pdf.set_font("Arial", size=12)
-
-    title = " Cardiovascular Risk Assessment Report\n"
-    pdf.set_font("Arial", 'B', 14)
-    pdf.multi_cell(0, 10, title)
-
-    pdf.set_font("Arial", size=12)
-    for line in report.split('\n'):
-        pdf.multi_cell(0, 10, line.strip())
-
+    pdf.multi_cell(0,10,report)
     pdf.output(filename)
-    print(f"\n PDF report saved as {filename}")
-
-
-
-def mock_predict(data):
-    if data['ap_hi'] > 140 or data['ap_lo'] > 90 or data['cholesterol'] > 1:
-        return 1
-    return 0
-
+    print(f"\nPDF saved as {filename}")
 
 if __name__ == "__main__":
     user_data = get_user_input()
-    prediction = mock_predict(user_data)
-    prompt = create_prompt(user_data, prediction)
-    print("Generating AI medical summary...")
+    df_user = pd.DataFrame([user_data])[features]
+    df_user_scaled = scaler.transform(df_user)
+    pred = clf.predict(df_user_scaled)[0]
+
+    prompt = create_prompt(user_data, pred)
+    print("\nGenerating summary…")
     summary = generate_explanation(prompt)
 
-    print("\n Summary Preview:\n")
-    print(summary)
-
+    print("\nSummary Preview:\n", summary)
     save_pdf(summary)
-#precison and recall
