@@ -2,52 +2,67 @@ import React, { useState } from "react";
 import "./Prediction.css";
 
 export default function Prediction() {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     age: "",
+    gender: "",
+    height: "",
+    weight: "",
+    ap_hi: "",
+    ap_lo: "",
     cholesterol: "",
-    bloodPressure: ""
-  });
+    gluc: "",
+    smoke: "",
+    alco: "",
+    active: ""
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
   };
 
   const handlePredict = async () => {
+    if (Object.values(formData).some((v) => v === "")) {
+      alert("Please fill in all fields before predicting.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
+      const formattedData = Object.fromEntries(
+        Object.entries(formData).map(([key, value]) => [key, Number(value)])
+      );
+
       const response = await fetch("http://localhost:5000/predict", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formattedData),
       });
 
-      const result = await response.json();
-      alert(`Prediction: ${result.prediction}`);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Prediction failed");
-    }
-  };
-
-  const handleSummarize = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/summarize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
 
       const result = await response.json();
-      alert(`Summary: ${result.summary}`);
+
+      if (result.prediction !== undefined) {
+        alert(`Prediction: ${result.prediction}`);
+      } else {
+        alert("Prediction not found in response.");
+        console.error("Unexpected API response:", result);
+      }
     } catch (error) {
       console.error("Error:", error);
-      alert("Summarization failed");
+      alert("Prediction failed. Check console for details.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,39 +74,26 @@ export default function Prediction() {
 
       <main className="prediction-main">
         <div className="form-container">
-          <label>Age:</label>
-          <input
-            type="number"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-            placeholder="Enter age"
-          />
-
-          <label>Cholesterol:</label>
-          <input
-            type="number"
-            name="cholesterol"
-            value={formData.cholesterol}
-            onChange={handleChange}
-            placeholder="Enter cholesterol level"
-          />
-
-          <label>Blood Pressure:</label>
-          <input
-            type="number"
-            name="bloodPressure"
-            value={formData.bloodPressure}
-            onChange={handleChange}
-            placeholder="Enter blood pressure"
-          />
+          {Object.keys(formData).map((field) => (
+            <div key={field} className="form-group">
+              <label>{field.replace(/_/g, " ").toUpperCase()}:</label>
+              <input
+                type="number"
+                name={field}
+                value={formData[field]}
+                onChange={handleChange}
+                placeholder={`Enter ${field}`}
+              />
+            </div>
+          ))}
 
           <div className="button-group">
-            <button className="predict-btn" onClick={handlePredict}>
-              Predict
-            </button>
-            <button className="summarize-btn" onClick={handleSummarize}>
-              Summarize
+            <button
+              className="predict-btn"
+              onClick={handlePredict}
+              disabled={loading}
+            >
+              {loading ? "Predicting..." : "Predict"}
             </button>
           </div>
         </div>
