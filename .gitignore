@@ -2,7 +2,7 @@
 __pycache__/
 *.py[codz]
 *$py.class
-
+summarizer
 # C extensions
 *.so
 # node modules
