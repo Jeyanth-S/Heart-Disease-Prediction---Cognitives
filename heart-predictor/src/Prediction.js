@@ -40,6 +40,24 @@ export default function Prediction() {
         Object.entries(formData).map(([key, value]) => [key, Number(value)])
       );
 
+      // const response = await fetch("http://localhost:5000/predict", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(formattedData),
+      // });
+
+      // if (!response.ok) {
+      //   throw new Error(`Server error: ${response.status}`);
+      // }
+
+      // const result = await response.json();
+
+      // if (result.prediction !== undefined) {
+      //   alert(`Prediction: ${result.prediction}`);
+      // } else {
+      //   alert("Prediction not found in response.");
+      //   console.error("Unexpected API response:", result);
+      // }
       const response = await fetch("http://localhost:5000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,14 +68,15 @@ export default function Prediction() {
         throw new Error(`Server error: ${response.status}`);
       }
 
-      const result = await response.json();
-
-      if (result.prediction !== undefined) {
-        alert(`Prediction: ${result.prediction}`);
+      const data = await response.json();
+      console.log("Prediction response:", data);
+      if (data !== undefined) {
+        alert(`Prediction: ${JSON.stringify(data)}`);
       } else {
         alert("Prediction not found in response.");
-        console.error("Unexpected API response:", result);
+        console.error("Unexpected API response:", data);
       }
+
     } catch (error) {
       console.error("Error:", error);
       alert("Prediction failed. Check console for details.");
